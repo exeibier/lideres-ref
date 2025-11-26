@@ -1,7 +1,12 @@
+/**
+ * Next.js 16 Proxy File
+ * This file handles middleware functionality for Supabase authentication.
+ * Note: Only this file should exist - no middleware.ts file should be present.
+ */
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return await updateSession(request)
 }
 
@@ -18,4 +23,6 @@ export const config = {
   ],
 }
 
-export default middleware;
+// Default export for Next.js 16 proxy
+export default proxy
+

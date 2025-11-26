@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -12,23 +12,78 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  // Listen for auth state changes and redirect when signed in
+  useEffect(() => {
+    const supabase = createClient()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        // Wait a bit to ensure cookies are persisted before redirecting
+        setTimeout(() => {
+          router.push('/')
+          router.refresh()
+        }, 300)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [router])
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      // Verify we got a session
+      if (!data.session) {
+        setError('No se pudo crear la sesión. Por favor, intenta de nuevo.')
+        setLoading(false)
+        return
+      }
+
+      // Wait longer for cookies to be properly set and persisted
+      // Supabase needs time to write cookies to the browser
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Verify session exists and is persisted
+      const { data: { session: verifiedSession } } = await supabase.auth.getSession()
+      if (!verifiedSession) {
+        setError('No se pudo verificar la sesión. Por favor, intenta de nuevo.')
+        setLoading(false)
+        return
+      }
+
+      // Double-check that the session is actually persisted
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setError('No se pudo verificar el usuario. Por favor, intenta de nuevo.')
+        setLoading(false)
+        return
+      }
+
+      // Use router.push() instead of window.location to avoid hard reload
+      // This preserves cookies and doesn't cause a full page reload
       router.push('/')
       router.refresh()
+      
+      // Note: We don't set loading to false here because we're navigating away
+    } catch (err: any) {
+      setError(err.message || 'Error inesperado al iniciar sesión')
+      setLoading(false)
     }
   }
 

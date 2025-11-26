@@ -8,6 +8,15 @@ export const ourFileRouter = {
       console.log("Upload complete");
       console.log("file url", file.url);
     }),
+  importFile: f({ 
+    "text/csv": { maxFileSize: "10MB", maxFileCount: 1 },
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { maxFileSize: "10MB", maxFileCount: 1 },
+    "application/vnd.ms-excel": { maxFileSize: "10MB", maxFileCount: 1 },
+  })
+    .onUploadComplete(async ({ file }) => {
+      console.log("Import file upload complete");
+      console.log("file url", file.url);
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

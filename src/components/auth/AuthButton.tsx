@@ -11,21 +11,68 @@ export default function AuthButton() {
 
   useEffect(() => {
     const supabase = createClient()
-    
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    let mounted = true
+
+    // Function to update user state and stop loading
+    const updateUserState = (user: any) => {
+      if (!mounted) return
       setUser(user)
       setLoading(false)
-    })
+    }
 
+    // Set up auth state change listener FIRST (this fires immediately on mount if session exists)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+      updateUserState(session?.user ?? null)
     })
 
-    return () => subscription.unsubscribe()
+    // Get initial user state - try both getUser and getSession for better compatibility
+    Promise.all([
+      supabase.auth.getUser(),
+      supabase.auth.getSession()
+    ])
+      .then(([userResult, sessionResult]) => {
+        if (!mounted) return
+        
+        // Prefer user from getUser, fallback to session
+        const user = userResult.data.user || sessionResult.data.session?.user
+        
+        if (userResult.error && sessionResult.error) {
+          console.error('Error getting auth state:', userResult.error)
+        }
+        
+        updateUserState(user)
+      })
+      .catch((error) => {
+        if (!mounted) return
+        console.error('Error in auth check:', error)
+        updateUserState(null)
+      })
+
+    // Fallback timeout to prevent infinite loading (reduced to 2 seconds)
+    const timeout = setTimeout(() => {
+      if (mounted) {
+        console.warn('AuthButton: Loading timeout, showing default state')
+        setLoading(false)
+      }
+    }, 2000)
+
+    return () => {
+      mounted = false
+      clearTimeout(timeout)
+      if (subscription) {
+        subscription.unsubscribe()
+      }
+    }
   }, [])
 
+  // Show a minimal loading state that matches the button size
   if (loading) {
-    return <div className="h-8 w-20 bg-gray-200 animate-pulse rounded"></div>
+    return (
+      <div className="flex items-center gap-4">
+        <div className="h-8 w-16 bg-gray-100 animate-pulse rounded"></div>
+        <div className="h-8 w-20 bg-gray-100 animate-pulse rounded"></div>
+      </div>
+    )
   }
 
   if (user) {
