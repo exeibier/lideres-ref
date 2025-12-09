@@ -47,7 +47,7 @@ export default async function AdminProductsPage({
   // Fetch products with pagination
   const { data: products, error } = await supabase
     .from('products')
-    .select('id, name, slug, price, status, featured, images, created_at, categories(name)')
+    .select('id, name, slug, sku, price, status, featured, images, created_at, categories(name)')
     .order('created_at', { ascending: false })
     .range(from, to)
 

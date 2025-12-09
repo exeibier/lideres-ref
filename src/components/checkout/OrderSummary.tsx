@@ -17,7 +17,7 @@ interface OrderSummaryProps {
 }
 
 export default function OrderSummary({ items, subtotal }: OrderSummaryProps) {
-  const shipping = 0
+  const shipping: number = 0
   const total = subtotal + shipping
 
   return (

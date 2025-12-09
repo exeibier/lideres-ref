@@ -82,7 +82,8 @@ export default function CheckoutForm({ addresses }: CheckoutFormProps) {
 
     // Calculate totals
     const subtotal = cartItems.reduce((sum, item) => {
-      return sum + (item.products.price * item.quantity)
+      const product = Array.isArray(item.products) ? item.products[0] : item.products
+      return sum + (product.price * item.quantity)
     }, 0)
     const shippingCost = 0 // Can be calculated based on address
     const total = subtotal + shippingCost

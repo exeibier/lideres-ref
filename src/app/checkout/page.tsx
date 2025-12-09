@@ -38,7 +38,14 @@ export default async function CheckoutPage() {
     .eq('user_id', user.id)
     .order('is_default', { ascending: false })
 
-  const subtotal = cartItems.reduce((sum, item) => {
+  // Transform cart items to ensure products is a single object, not an array
+  const transformedCartItems = cartItems.map(item => ({
+    id: item.id,
+    quantity: item.quantity,
+    products: Array.isArray(item.products) ? item.products[0] : item.products
+  }))
+
+  const subtotal = transformedCartItems.reduce((sum, item) => {
     return sum + (item.products.price * item.quantity)
   }, 0)
 
@@ -51,7 +58,7 @@ export default async function CheckoutPage() {
           <CheckoutForm addresses={addresses || []} />
         </div>
         <div className="lg:col-span-1">
-          <OrderSummary items={cartItems} subtotal={subtotal} />
+          <OrderSummary items={transformedCartItems} subtotal={subtotal} />
         </div>
       </div>
     </div>

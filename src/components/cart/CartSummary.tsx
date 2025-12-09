@@ -5,7 +5,7 @@ interface CartSummaryProps {
 }
 
 export default function CartSummary({ subtotal }: CartSummaryProps) {
-  const shipping = 0 // Free shipping for now, can be calculated later
+  const shipping: number = 0 // Free shipping for now, can be calculated later
   const total = subtotal + shipping
 
   return (

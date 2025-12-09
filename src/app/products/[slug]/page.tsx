@@ -75,7 +75,7 @@ export default async function ProductDetailPage({
           </div>
           {product.images && product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
-              {product.images.slice(0, 4).map((image, index) => (
+              {product.images.slice(0, 4).map((image: string, index: number) => (
                 <div key={index} className="aspect-square relative bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
                   <Image
                     src={image}
@@ -188,7 +188,7 @@ export default async function ProductDetailPage({
             <div className="mb-6">
               <h3 className="text-sm font-semibold mb-2">Compatibilidad</h3>
               <div className="flex flex-wrap gap-2">
-                {product.compatibility.map((model, index) => (
+                {product.compatibility.map((model: string, index: number) => (
                   <span
                     key={index}
                     className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm font-medium"

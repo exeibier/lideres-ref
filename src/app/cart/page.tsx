@@ -32,18 +32,25 @@ export default async function CartPage() {
     return <div className="text-center py-12">Error al cargar el carrito</div>
   }
 
-  const subtotal = cartItems?.reduce((sum, item) => {
+  // Transform cart items to ensure products is a single object, not an array
+  const transformedCartItems = cartItems?.map(item => ({
+    id: item.id,
+    quantity: item.quantity,
+    products: Array.isArray(item.products) ? item.products[0] : item.products
+  })) || []
+
+  const subtotal = transformedCartItems.reduce((sum, item) => {
     return sum + (item.products.price * item.quantity)
-  }, 0) || 0
+  }, 0)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Carrito de compras</h1>
       
-      {cartItems && cartItems.length > 0 ? (
+      {transformedCartItems && transformedCartItems.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <CartItems items={cartItems} />
+            <CartItems items={transformedCartItems} />
           </div>
           <div className="lg:col-span-1">
             <CartSummary subtotal={subtotal} />

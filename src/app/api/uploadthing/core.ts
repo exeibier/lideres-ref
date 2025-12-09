@@ -9,9 +9,9 @@ export const ourFileRouter = {
       console.log("file url", file.url);
     }),
   importFile: f({ 
-    "text/csv": { maxFileSize: "10MB", maxFileCount: 1 },
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { maxFileSize: "10MB", maxFileCount: 1 },
-    "application/vnd.ms-excel": { maxFileSize: "10MB", maxFileCount: 1 },
+    "text/csv": { maxFileSize: "16MB", maxFileCount: 1 },
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { maxFileSize: "16MB", maxFileCount: 1 },
+    "application/vnd.ms-excel": { maxFileSize: "16MB", maxFileCount: 1 },
   })
     .onUploadComplete(async ({ file }) => {
       console.log("Import file upload complete");

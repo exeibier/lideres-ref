@@ -39,7 +39,7 @@ export default async function EditProductPage({
   // Fetch categories
   const { data: categories } = await supabase
     .from('categories')
-    .select('id, name, slug')
+    .select('*')
     .order('name')
 
   return (

@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
 
     // Calculate totals
     const subtotal = cartItems.reduce((sum, item) => {
-      return sum + (item.products.price * item.quantity)
+      const product = Array.isArray(item.products) ? item.products[0] : item.products
+      return sum + (product.price * item.quantity)
     }, 0)
     const shippingCost = 0
     const total = subtotal + shippingCost
@@ -71,14 +72,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Create order items
-    const orderItems = cartItems.map(item => ({
-      order_id: order.id,
-      product_id: item.products.id,
-      product_name: item.products.name,
-      product_sku: item.products.sku,
-      quantity: item.quantity,
-      price: item.products.price,
-    }))
+    const orderItems = cartItems.map(item => {
+      const product = Array.isArray(item.products) ? item.products[0] : item.products
+      return {
+        order_id: order.id,
+        product_id: product.id,
+        product_name: product.name,
+        product_sku: product.sku,
+        quantity: item.quantity,
+        price: product.price,
+      }
+    })
 
     const { error: itemsError } = await supabase
       .from('order_items')
