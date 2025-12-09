@@ -9,18 +9,43 @@ export const revalidate = 60
 export default async function ProductDetailPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
+  const { slug } = await params
   const supabase = await createClient()
   
-  const { data: product, error } = await supabase
+  // Check if user is admin
+  const { data: { user } } = await supabase.auth.getUser()
+  let isAdmin = false
+  
+  if (user) {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    
+    isAdmin = profile?.role === 'admin'
+  }
+  
+  // Build query - admins can see all products, others only active
+  let productQuery = supabase
     .from('products')
     .select('*, categories(name, slug)')
-    .eq('slug', params.slug)
-    .eq('status', 'active')
-    .single()
+    .eq('slug', slug)
+  
+  if (!isAdmin) {
+    productQuery = productQuery.eq('status', 'active')
+  }
+  
+  const { data: product, error } = await productQuery.single()
 
   if (error || !product) {
+    notFound()
+  }
+  
+  // Non-admins should not see inactive/draft products even if they access by slug
+  if (!isAdmin && product.status !== 'active') {
     notFound()
   }
 
@@ -32,7 +57,7 @@ export default async function ProductDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Product Images */}
         <div>
-          <div className="aspect-square relative bg-gray-100 rounded-lg overflow-hidden mb-4">
+          <div className="aspect-square relative bg-gray-50 rounded-xl overflow-hidden mb-4 border border-gray-200 shadow-sm">
             {mainImage ? (
               <Image
                 src={mainImage}
@@ -51,7 +76,7 @@ export default async function ProductDetailPage({
           {product.images && product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
               {product.images.slice(0, 4).map((image, index) => (
-                <div key={index} className="aspect-square relative bg-gray-100 rounded overflow-hidden">
+                <div key={index} className="aspect-square relative bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
                   <Image
                     src={image}
                     alt={`${product.name} ${index + 1}`}
@@ -67,6 +92,29 @@ export default async function ProductDetailPage({
 
         {/* Product Info */}
         <div>
+          {isAdmin && (
+            <div className="mb-4">
+              <Link
+                href={`/admin/products/${product.id}/edit`}
+                className="inline-flex items-center px-4 py-2 bg-[var(--color-primary-600)] hover:bg-[var(--color-primary-700)] text-white text-sm font-bold rounded-xl transition-all duration-200 hover:shadow-md"
+              >
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                Editar producto
+              </Link>
+            </div>
+          )}
           {product.brand && (
             <p className="text-sm text-gray-500 mb-2">{product.brand}</p>
           )}
@@ -76,7 +124,7 @@ export default async function ProductDetailPage({
             <div className="mb-4">
               <Link
                 href={`/categories/${product.categories.slug}`}
-                className="text-blue-600 hover:text-blue-700 text-sm"
+                className="text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)] text-sm font-semibold transition-colors"
               >
                 {product.categories.name}
               </Link>
@@ -95,7 +143,7 @@ export default async function ProductDetailPage({
               )}
             </div>
             {hasDiscount && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm font-semibold text-[var(--color-error)]">
                 Ahorra ${((product.compare_at_price! - product.price)).toLocaleString('es-MX')}
               </p>
             )}
@@ -143,7 +191,7 @@ export default async function ProductDetailPage({
                 {product.compatibility.map((model, index) => (
                   <span
                     key={index}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                    className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm font-medium"
                   >
                     {model}
                   </span>

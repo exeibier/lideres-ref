@@ -75,51 +75,68 @@ export default function ShippingAddresses({ addresses: initialAddresses }: Shipp
     e.preventDefault()
     setLoading(true)
 
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) return
-
-    // If setting as default, unset other defaults
-    if (formData.is_default) {
-      await supabase
-        .from('shipping_addresses')
-        .update({ is_default: false })
-        .eq('user_id', user.id)
-        .neq('id', editingId || '')
-    }
-
-    if (editingId) {
-      // Update existing
-      const { error } = await supabase
-        .from('shipping_addresses')
-        .update(formData)
-        .eq('id', editingId)
-
-      if (error) {
-        alert('Error al actualizar la dirección')
-      } else {
-        router.refresh()
-        resetForm()
+    try {
+      const supabase = createClient()
+      const { data: { user }, error } = await supabase.auth.getUser()
+      
+      // Handle missing session gracefully
+      if (error && error.name === 'AuthSessionMissingError') {
+        setLoading(false)
+        return
       }
-    } else {
-      // Create new
-      const { error } = await supabase
-        .from('shipping_addresses')
-        .insert({
-          user_id: user.id,
-          ...formData,
-        })
-
-      if (error) {
-        alert('Error al crear la dirección')
-      } else {
-        router.refresh()
-        resetForm()
+      
+      if (!user) {
+        setLoading(false)
+        return
       }
+
+      // If setting as default, unset other defaults
+      if (formData.is_default) {
+        await supabase
+          .from('shipping_addresses')
+          .update({ is_default: false })
+          .eq('user_id', user.id)
+          .neq('id', editingId || '')
+      }
+
+      if (editingId) {
+        // Update existing
+        const { error } = await supabase
+          .from('shipping_addresses')
+          .update(formData)
+          .eq('id', editingId)
+
+        if (error) {
+          alert('Error al actualizar la dirección')
+        } else {
+          router.refresh()
+          resetForm()
+        }
+      } else {
+        // Create new
+        const { error } = await supabase
+          .from('shipping_addresses')
+          .insert({
+            user_id: user.id,
+            ...formData,
+          })
+
+        if (error) {
+          alert('Error al crear la dirección')
+        } else {
+          router.refresh()
+          resetForm()
+        }
+      }
+    } catch (error: any) {
+      // Handle AuthSessionMissingError and other errors gracefully
+      if (error?.name !== 'AuthSessionMissingError') {
+        console.error('Error saving address:', error)
+        alert('Error al guardar la dirección')
+      }
+    } finally {
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
   const handleDelete = async (id: string) => {

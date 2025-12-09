@@ -50,49 +50,49 @@ export default function ProfileForm({ user, profile: initialProfile }: ProfileFo
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">Información personal</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Información personal</h2>
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             Nombre completo
           </label>
           <input
             type="text"
             value={formData.full_name}
             onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             Email
           </label>
           <input
             type="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             Teléfono
           </label>
           <input
             type="tel"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-[var(--color-primary-600)] hover:bg-[var(--color-primary-700)] text-white font-bold py-3 px-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
         >
           {loading ? 'Guardando...' : 'Guardar cambios'}
         </button>

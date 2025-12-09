@@ -50,11 +50,11 @@ export default async function CartPage() {
           </div>
         </div>
       ) : (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">Tu carrito está vacío</p>
+        <div className="text-center py-12 bg-white rounded-xl border border-gray-200 p-12">
+          <p className="text-gray-600 mb-6 text-lg">Tu carrito está vacío</p>
           <a
             href="/products"
-            className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+            className="inline-block bg-[var(--color-primary-600)] hover:bg-[var(--color-primary-700)] text-white px-6 py-3 rounded-xl font-bold transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
           >
             Ver productos
           </a>

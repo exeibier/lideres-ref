@@ -45,33 +45,98 @@ N8N_WEBHOOK_BULK_UPLOAD=your_n8n_bulk_upload_webhook_url
 
 # App Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Admin Promotion (optional, for creating first admin user)
+ADMIN_PROMOTION_SECRET=your-secret-key-here
 ```
 
 ### 2. Configurar Supabase
 
 1. Crea un proyecto en [Supabase](https://supabase.com)
-2. Ejecuta las migraciones SQL en el orden:
-   - `supabase/migrations/001_initial_schema.sql`
-   - `supabase/migrations/002_rls_policies.sql`
+2. **Ejecuta las migraciones SQL en el orden** (en el SQL Editor de Supabase):
+   - `supabase/migrations/001_initial_schema.sql` - Crea todas las tablas base (user_profiles, products, orders, etc.)
+   - `supabase/migrations/002_rls_policies.sql` - Configura Row Level Security
+   - `supabase/migrations/003_bulk_import_schema.sql` - Schema para importación masiva (opcional pero recomendado)
+   - `supabase/migrations/005_backfill_existing_users.sql` - **IMPORTANTE:** Crea perfiles para usuarios existentes (si creaste usuarios antes de las migraciones)
+   
+   **⚠️ IMPORTANTE:** 
+   - Debes ejecutar estas migraciones ANTES de intentar crear un usuario admin.
+   - Si ya tenías usuarios creados antes de correr las migraciones, ejecuta la migración 005 para crear sus perfiles.
 3. Configura la autenticación en Supabase Dashboard:
    - Ve a Authentication > Providers
    - Habilita Email provider
    - Configura las URLs de redirección
 
-### 3. Configurar UploadThing
+### 3. Crear Usuario Administrador
+
+Después de crear tu primer usuario mediante el registro normal, necesitas promoverlo a administrador. Tienes dos opciones:
+
+#### Opción 1: Usando SQL (Recomendado para desarrollo)
+
+**⚠️ IMPORTANTE:** Asegúrate de haber ejecutado primero las migraciones 001, 002 y 003 (ver sección 2 arriba).
+
+1. Ve al SQL Editor en tu dashboard de Supabase
+2. Ejecuta el siguiente SQL, reemplazando `'user@example.com'` con el email del usuario que quieres promover:
+
+```sql
+UPDATE user_profiles
+SET role = 'admin'
+WHERE email = 'user@example.com';
+```
+
+O si prefieres promover el primer usuario creado:
+
+```sql
+UPDATE user_profiles
+SET role = 'admin'
+WHERE id = (SELECT id FROM user_profiles ORDER BY created_at ASC LIMIT 1);
+```
+
+#### Opción 2: Usando API Endpoint (Recomendado para producción)
+
+1. Agrega `ADMIN_PROMOTION_SECRET` a tu archivo `.env.local` con un valor secreto (ej: `my-super-secret-key-123`)
+2. Reinicia tu servidor de desarrollo
+3. Haz una petición POST al endpoint:
+
+```bash
+curl -X POST http://localhost:3000/api/admin/promote-user \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Secret-Key: your-secret-key-here" \
+  -d '{"email": "user@example.com"}'
+```
+
+O usando JavaScript/TypeScript:
+
+```javascript
+const response = await fetch('http://localhost:3000/api/admin/promote-user', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Admin-Secret-Key': 'your-secret-key-here'
+  },
+  body: JSON.stringify({ email: 'user@example.com' })
+});
+
+const result = await response.json();
+console.log(result);
+```
+
+**Nota de Seguridad:** Después de crear tu primer admin, considera eliminar o cambiar el `ADMIN_PROMOTION_SECRET` para mayor seguridad, o deshabilitar el endpoint en producción.
+
+### 4. Configurar UploadThing
 
 1. Crea una cuenta en [UploadThing](https://uploadthing.com)
 2. Crea una nueva app
 3. Obtén el token (`UPLOADTHING_TOKEN`) desde el dashboard
 4. Configura los dominios permitidos en el dashboard
 
-### 4. Instalar Dependencias
+### 5. Instalar Dependencias
 
 ```bash
 npm install
 ```
 
-### 5. Ejecutar en Desarrollo
+### 6. Ejecutar en Desarrollo
 
 ```bash
 npm run dev
