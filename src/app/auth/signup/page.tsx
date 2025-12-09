@@ -18,6 +18,21 @@ export default function SignupPage() {
     setError(null)
     setLoading(true)
 
+    // Check if maintenance mode is enabled
+    try {
+      const maintenanceCheck = await fetch('/api/maintenance/check')
+      const maintenanceData = await maintenanceCheck.json()
+      
+      if (maintenanceData.enabled) {
+        setError('El registro está deshabilitado durante el modo de mantenimiento')
+        setLoading(false)
+        return
+      }
+    } catch (err) {
+      // If check fails, allow signup to proceed (fail open for better UX)
+      console.warn('Could not check maintenance mode status')
+    }
+
     const supabase = createClient()
     const { error } = await supabase.auth.signUp({
       email,

@@ -35,13 +35,25 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Check if maintenance mode is enabled and user has maintenance cookie
+  const maintenanceModeEnabled = process.env.MAINTENANCE_MODE_ENABLED === 'true'
+  const maintenanceCookie = request.cookies.get('maintenance_access')
+  const hasMaintenanceAccess = maintenanceModeEnabled && 
+    maintenanceCookie && 
+    maintenanceCookie.value === 'granted'
+
   // Protected admin routes - check both authentication and admin role
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!user) {
+    if (!user && !hasMaintenanceAccess) {
       const url = request.nextUrl.clone()
       url.pathname = '/auth/login'
       url.searchParams.set('redirect', request.nextUrl.pathname)
       return NextResponse.redirect(url)
+    }
+    
+    // In maintenance mode, skip admin check - maintenance password is enough
+    if (hasMaintenanceAccess) {
+      return supabaseResponse
     }
     
     // Check admin role in middleware (pages also check as backup)
@@ -66,13 +78,13 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  if (!user && request.nextUrl.pathname.startsWith('/profile')) {
+  if (!user && !hasMaintenanceAccess && request.nextUrl.pathname.startsWith('/profile')) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)
   }
 
-  if (!user && request.nextUrl.pathname.startsWith('/checkout')) {
+  if (!user && !hasMaintenanceAccess && request.nextUrl.pathname.startsWith('/checkout')) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)

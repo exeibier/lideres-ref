@@ -12,10 +12,50 @@ interface AuthButtonProps {
 export default function AuthButton({ isAdmin = false }: AuthButtonProps) {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [showAuthButtons, setShowAuthButtons] = useState<boolean | null>(null) // null = not checked yet
 
   useEffect(() => {
     const supabase = createClient()
     let mounted = true
+
+    // Check maintenance mode and cookie status
+    const checkMaintenanceAccess = async () => {
+      try {
+        const response = await fetch('/api/maintenance/check', {
+          cache: 'no-store' // Ensure fresh check on each load
+        })
+        if (!response.ok) {
+          throw new Error('Failed to check maintenance mode')
+        }
+        const data = await response.json()
+        
+        if (mounted) {
+          // If maintenance mode is enabled, check if user has access (cookie is set)
+          if (data.enabled === true) {
+            // Show buttons only if maintenance cookie is set (hasAccess)
+            setShowAuthButtons(data.hasAccess === true)
+          } else {
+            // Maintenance mode is off, always show buttons
+            setShowAuthButtons(true)
+          }
+        }
+      } catch (error) {
+        // If check fails, assume maintenance mode is off (fail open)
+        console.warn('Could not check maintenance mode, assuming off:', error)
+        if (mounted) {
+          setShowAuthButtons(true)
+        }
+      }
+    }
+
+    checkMaintenanceAccess()
+    
+    // Also check on cookie changes (when maintenance password is entered)
+    const checkCookieInterval = setInterval(() => {
+      if (mounted) {
+        checkMaintenanceAccess()
+      }
+    }, 1000) // Check every second
 
     // Function to update user state and stop loading
     const updateUserState = (user: any) => {
@@ -67,6 +107,7 @@ export default function AuthButton({ isAdmin = false }: AuthButtonProps) {
     return () => {
       mounted = false
       clearTimeout(timeout)
+      clearInterval(checkCookieInterval)
       if (subscription) {
         subscription.unsubscribe()
       }
@@ -74,7 +115,8 @@ export default function AuthButton({ isAdmin = false }: AuthButtonProps) {
   }, [])
 
   // Show a minimal loading state that matches the button size
-  if (loading) {
+  // Show loading if we're still checking user OR maintenance access
+  if (loading || showAuthButtons === null) {
     return (
       <div className="flex items-center gap-4">
         <div className="h-8 w-16 bg-gray-100 animate-pulse rounded"></div>
@@ -104,6 +146,13 @@ export default function AuthButton({ isAdmin = false }: AuthButtonProps) {
       </div>
     )
   }
+
+  // Hide login/signup buttons if maintenance mode is on but cookie is not set
+  if (showAuthButtons === false) {
+    return null
+  }
+
+  // Show login/signup buttons (maintenance mode is off OR cookie is set)
 
   return (
     <div className="flex items-center gap-3">

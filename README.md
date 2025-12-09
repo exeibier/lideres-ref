@@ -48,6 +48,10 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # Admin Promotion (optional, for creating first admin user)
 ADMIN_PROMOTION_SECRET=your-secret-key-here
+
+# Maintenance Mode (for early deployment protection)
+MAINTENANCE_MODE_ENABLED=false
+MAINTENANCE_PASSWORD=your-maintenance-password-here
 ```
 
 ### 2. Configurar Supabase
@@ -278,6 +282,48 @@ n8n debe responder con:
 - Políticas de acceso basadas en roles (admin/customer)
 - Validación de autenticación en rutas protegidas
 - Sanitización de inputs
+
+## Modo de Mantenimiento (Protección Temprana)
+
+Para proteger la aplicación durante el despliegue temprano, puedes habilitar el modo de mantenimiento. Este modo:
+
+1. **Protege las rutas de autenticación** con una contraseña simple
+2. **Restringe el acceso a la aplicación** solo a usuarios administradores
+3. **Permite acceso controlado** a través de una página de mantenimiento
+
+### Configuración
+
+1. Establece las variables de entorno en `.env.local`:
+
+```bash
+MAINTENANCE_MODE_ENABLED=true
+MAINTENANCE_PASSWORD=tu-contraseña-secreta-aqui
+```
+
+2. Reinicia el servidor de desarrollo o producción
+
+### Funcionamiento
+
+- **Con modo de mantenimiento habilitado:**
+  - Los usuarios que intenten acceder a rutas de autenticación (`/auth/*`) serán redirigidos a `/maintenance`
+  - Deben ingresar la contraseña de mantenimiento para acceder a las páginas de login/signup
+  - Una vez autenticados, solo los usuarios con rol `admin` pueden acceder al resto de la aplicación
+  - La cookie de mantenimiento expira en 24 horas
+
+- **Sin modo de mantenimiento (MAINTENANCE_MODE_ENABLED=false):**
+  - La aplicación funciona normalmente
+  - Las rutas de autenticación son públicas
+  - El acceso sigue siendo restringido a admins para rutas protegidas
+
+### Deshabilitar Protección
+
+Cuando estés listo para hacer la aplicación pública, simplemente cambia:
+
+```bash
+MAINTENANCE_MODE_ENABLED=false
+```
+
+O elimina las variables de entorno relacionadas con mantenimiento.
 
 ## Próximos Pasos
 
