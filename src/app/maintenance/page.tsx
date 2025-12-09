@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function MaintenancePage() {
+function MaintenanceForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [password, setPassword] = useState('')
@@ -90,6 +90,20 @@ export default function MaintenancePage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function MaintenancePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    }>
+      <MaintenanceForm />
+    </Suspense>
   )
 }
 

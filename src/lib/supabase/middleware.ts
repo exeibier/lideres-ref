@@ -58,6 +58,14 @@ export async function updateSession(request: NextRequest) {
     
     // Check admin role in middleware (pages also check as backup)
     // This prevents unnecessary page loads for non-admins
+    // At this point, user must exist (checked above), but TypeScript needs explicit check
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      url.searchParams.set('redirect', request.nextUrl.pathname)
+      return NextResponse.redirect(url)
+    }
+    
     try {
       const { data: profile, error } = await supabase
         .from('user_profiles')
