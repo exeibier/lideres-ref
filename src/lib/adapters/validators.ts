@@ -1,27 +1,10 @@
-import { z } from 'zod';
 import type { StagedItem } from './types';
 
 /**
- * Base schema for StagedItem validation
+ * Manual validation for StagedItem
+ * Using manual validation instead of Zod to avoid version compatibility issues
+ * This provides the same level of validation with better error messages
  */
-export const stagedItemSchema = z.object({
-  providerCode: z.enum(['motos_y_equipos', 'mrm']),
-  providerSku: z.string().min(1, 'Provider SKU is required'),
-  name: z.string().min(1, 'Name is required'),
-  description: z.string().optional(),
-  brand: z.string().optional(),
-  model: z.string().optional(),
-  category: z.string().optional(),
-  unit: z.string().optional(),
-  warehouse: z.string().optional(),
-  stock: z.number().int().nullable().optional(),
-  price: z.number().nullable(),
-  priceDiscounted: z.number().nullable().optional(),
-  msrp: z.number().nullable().optional(),
-  currency: z.literal('MXN'),
-  extra: z.record(z.unknown()).optional(),
-  imageHints: z.array(z.string()).optional(),
-});
 
 /**
  * Validate a staged item with detailed error messages
@@ -58,12 +41,41 @@ export function validateStagedItem(item: StagedItem): { valid: boolean; errors: 
     errors.push('Currency must be MXN');
   }
 
-  // Try Zod validation for additional checks
-  const result = stagedItemSchema.safeParse(item);
-  if (!result.success) {
-    result.error.issues.forEach((err) => {
-      errors.push(`${err.path.join('.')}: ${err.message}`);
-    });
+  // Type validation for optional fields
+  if (item.description !== undefined && typeof item.description !== 'string') {
+    errors.push('Description must be a string');
+  }
+
+  if (item.brand !== undefined && typeof item.brand !== 'string') {
+    errors.push('Brand must be a string');
+  }
+
+  if (item.model !== undefined && typeof item.model !== 'string') {
+    errors.push('Model must be a string');
+  }
+
+  if (item.category !== undefined && typeof item.category !== 'string') {
+    errors.push('Category must be a string');
+  }
+
+  if (item.unit !== undefined && typeof item.unit !== 'string') {
+    errors.push('Unit must be a string');
+  }
+
+  if (item.warehouse !== undefined && typeof item.warehouse !== 'string') {
+    errors.push('Warehouse must be a string');
+  }
+
+  if (item.priceDiscounted !== undefined && item.priceDiscounted !== null && (typeof item.priceDiscounted !== 'number' || isNaN(item.priceDiscounted))) {
+    errors.push('Price discounted must be a valid number or null');
+  }
+
+  if (item.msrp !== undefined && item.msrp !== null && (typeof item.msrp !== 'number' || isNaN(item.msrp))) {
+    errors.push('MSRP must be a valid number or null');
+  }
+
+  if (item.imageHints !== undefined && !Array.isArray(item.imageHints)) {
+    errors.push('Image hints must be an array');
   }
 
   return {

@@ -81,10 +81,10 @@ export default function CartItems({ items: initialItems }: CartItemsProps) {
         return (
           <div
             key={item.id}
-            className="bg-white border border-gray-200 rounded-lg p-4 flex gap-4"
+            className="bg-white border border-gray-200 rounded-xl p-5 flex gap-4 shadow-sm"
           >
             <Link href={`/products/${item.products.slug}`} className="flex-shrink-0">
-              <div className="w-24 h-24 relative bg-gray-100 rounded overflow-hidden">
+              <div className="w-24 h-24 relative bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
                 <Image
                   src={image}
                   alt={item.products.name}
@@ -96,7 +96,7 @@ export default function CartItems({ items: initialItems }: CartItemsProps) {
             </Link>
             <div className="flex-1">
               <Link href={`/products/${item.products.slug}`}>
-                <h3 className="font-semibold text-gray-900 hover:text-blue-600">
+                <h3 className="font-semibold text-gray-900 hover:text-[var(--color-primary-600)] transition-colors">
                   {item.products.name}
                 </h3>
               </Link>
@@ -104,21 +104,23 @@ export default function CartItems({ items: initialItems }: CartItemsProps) {
                 ${item.products.price.toLocaleString('es-MX')}
               </p>
               <div className="flex items-center gap-4 mt-4">
-                <div className="flex items-center border border-gray-300 rounded">
+                <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
                     disabled={updating === item.id}
-                    className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50"
+                    className="px-4 py-2 hover:bg-gray-100 disabled:opacity-50 transition-colors font-semibold text-gray-700"
+                    aria-label="Decrease quantity"
                   >
                     -
                   </button>
-                  <span className="w-12 text-center">{item.quantity}</span>
+                  <span className="w-12 text-center font-semibold py-2">{item.quantity}</span>
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                     disabled={updating === item.id}
-                    className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50"
+                    className="px-4 py-2 hover:bg-gray-100 disabled:opacity-50 transition-colors font-semibold text-gray-700"
+                    aria-label="Increase quantity"
                   >
                     +
                   </button>
@@ -126,7 +128,8 @@ export default function CartItems({ items: initialItems }: CartItemsProps) {
                 <button
                   onClick={() => removeItem(item.id)}
                   disabled={updating === item.id}
-                  className="text-red-600 hover:text-red-700 text-sm disabled:opacity-50"
+                  className="text-[var(--color-error)] hover:text-[var(--color-error)] text-sm font-semibold disabled:opacity-50 transition-colors"
+                  aria-label="Remove item"
                 >
                   Eliminar
                 </button>

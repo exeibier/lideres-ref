@@ -20,14 +20,14 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={`/products/${product.slug}`} className="group">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-        <div className="aspect-square relative bg-gray-100">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-200 hover:border-[var(--color-primary-200)]">
+        <div className="aspect-square relative bg-gray-50 rounded-t-xl overflow-hidden">
           {product.images && product.images.length > 0 ? (
             <Image
               src={mainImage}
               alt={product.name}
               fill
-              className="object-cover group-hover:scale-105 transition-transform"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
           ) : (
@@ -36,23 +36,23 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
           {hasDiscount && (
-            <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
+            <div className="absolute top-3 right-3 bg-[var(--color-error)] text-white text-xs font-bold px-3 py-1.5 rounded-md shadow-md">
               Oferta
             </div>
           )}
         </div>
-        <div className="p-4">
+        <div className="p-5">
           {product.brand && (
-            <p className="text-sm text-gray-500 mb-1">{product.brand}</p>
+            <p className="text-sm text-gray-600 mb-1.5 font-medium">{product.brand}</p>
           )}
-          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-[var(--color-primary-600)] transition-colors text-base leading-snug">
             {product.name}
           </h3>
           {product.motorcycle_brand && (
-            <p className="text-xs text-gray-400 mb-2">Para: {product.motorcycle_brand}</p>
+            <p className="text-xs text-gray-500 mb-3">Para: {product.motorcycle_brand}</p>
           )}
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-gray-900">
+            <span className="text-xl font-bold text-gray-900">
               ${product.price.toLocaleString('es-MX')}
             </span>
             {hasDiscount && (

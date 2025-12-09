@@ -42,12 +42,22 @@ export default function CheckoutForm({ addresses }: CheckoutFormProps) {
     e.preventDefault()
     setLoading(true)
 
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/auth/login')
-      return
-    }
+    try {
+      const supabase = createClient()
+      const { data: { user }, error } = await supabase.auth.getUser()
+      
+      // Handle missing session gracefully
+      if (error && error.name === 'AuthSessionMissingError') {
+        router.push('/auth/login')
+        setLoading(false)
+        return
+      }
+      
+      if (!user) {
+        router.push('/auth/login')
+        setLoading(false)
+        return
+      }
 
     // Get cart items
     const { data: cartItems } = await supabase
@@ -126,38 +136,49 @@ export default function CheckoutForm({ addresses }: CheckoutFormProps) {
 
     const data = await response.json()
 
-    if (!response.ok) {
-      alert(data.error || 'Error al crear el pedido')
-      setLoading(false)
-      return
-    }
+      if (!response.ok) {
+        alert(data.error || 'Error al crear el pedido')
+        setLoading(false)
+        return
+      }
 
-    router.push(`/orders/${data.orderId}`)
+      router.push(`/orders/${data.orderId}`)
+    } catch (error: any) {
+      // Handle AuthSessionMissingError and other errors gracefully
+      if (error?.name === 'AuthSessionMissingError') {
+        router.push('/auth/login')
+      } else {
+        console.error('Error in checkout:', error)
+        alert('Error al procesar el pedido')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   const selectedAddress = addresses.find(a => a.id === selectedAddressId)
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
-      <h2 className="text-xl font-semibold">Dirección de envío</h2>
+    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 space-y-6 shadow-sm">
+      <h2 className="text-2xl font-bold text-gray-900">Dirección de envío</h2>
 
       {addresses.length > 0 && (
         <div>
-          <label className="flex items-center mb-4">
+          <label className="flex items-center mb-4 cursor-pointer">
             <input
               type="checkbox"
               checked={useSavedAddress}
               onChange={(e) => setUseSavedAddress(e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="rounded-md border-gray-300 w-5 h-5 text-[var(--color-primary-600)] focus:ring-2 focus:ring-[var(--color-primary-600)] focus:ring-offset-0 cursor-pointer"
             />
-            <span className="ml-2">Usar dirección guardada</span>
+            <span className="ml-3 text-sm font-semibold text-gray-700">Usar dirección guardada</span>
           </label>
 
           {useSavedAddress && (
             <select
               value={selectedAddressId}
               onChange={(e) => setSelectedAddressId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900 font-medium"
             >
               <option value="">Selecciona una dirección</option>
               {addresses.map((address) => (
@@ -174,7 +195,7 @@ export default function CheckoutForm({ addresses }: CheckoutFormProps) {
       {(!useSavedAddress || !selectedAddress) && (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Nombre completo *
             </label>
             <input
@@ -182,12 +203,12 @@ export default function CheckoutForm({ addresses }: CheckoutFormProps) {
               required
               value={formData.full_name}
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Teléfono *
             </label>
             <input
@@ -195,12 +216,12 @@ export default function CheckoutForm({ addresses }: CheckoutFormProps) {
               required
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Dirección línea 1 *
             </label>
             <input
@@ -208,25 +229,25 @@ export default function CheckoutForm({ addresses }: CheckoutFormProps) {
               required
               value={formData.address_line1}
               onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Dirección línea 2
             </label>
             <input
               type="text"
               value={formData.address_line2}
               onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Ciudad *
               </label>
               <input
@@ -234,12 +255,12 @@ export default function CheckoutForm({ addresses }: CheckoutFormProps) {
                 required
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Estado *
               </label>
               <input
@@ -247,13 +268,13 @@ export default function CheckoutForm({ addresses }: CheckoutFormProps) {
                 required
                 value={formData.state}
                 onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Código postal *
             </label>
             <input
@@ -261,12 +282,12 @@ export default function CheckoutForm({ addresses }: CheckoutFormProps) {
               required
               value={formData.postal_code}
               onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               País *
             </label>
             <input
@@ -274,28 +295,28 @@ export default function CheckoutForm({ addresses }: CheckoutFormProps) {
               required
               value={formData.country}
               onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900"
             />
           </div>
         </>
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
           Notas del pedido (opcional)
         </label>
         <textarea
           value={formData.notes}
           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--color-primary-600)] focus:border-[var(--color-primary-600)] outline-none transition-all text-gray-900 resize-none"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-[var(--color-primary-600)] hover:bg-[var(--color-primary-700)] text-white font-bold py-3.5 px-6 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
       >
         {loading ? 'Procesando...' : 'Confirmar pedido'}
       </button>

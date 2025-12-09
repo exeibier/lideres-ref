@@ -1,14 +1,27 @@
 import { createClient } from '@/lib/supabase/server'
 import ProductCard from '@/components/products/ProductCard'
 import ProductFilters from '@/components/products/ProductFilters'
+import Pagination from '@/components/products/Pagination'
 
 export const revalidate = 60
+
+// Helper function to safely get string value from searchParams
+function getStringParam(value: string | string[] | undefined): string | undefined {
+  if (typeof value === 'string') {
+    return value
+  }
+  if (Array.isArray(value) && value.length > 0) {
+    return value[0]
+  }
+  return undefined
+}
 
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+  const params = await searchParams
   const supabase = await createClient()
   
   let query = supabase
@@ -17,41 +30,77 @@ export default async function ProductsPage({
     .eq('status', 'active')
 
   // Apply filters
-  if (searchParams.category) {
-    query = query.eq('category_id', searchParams.category as string)
+  const category = getStringParam(params.category)
+  if (category) {
+    query = query.eq('category_id', category)
   }
-  if (searchParams.brand) {
-    query = query.eq('brand', searchParams.brand as string)
+  
+  const brand = getStringParam(params.brand)
+  if (brand) {
+    query = query.eq('brand', brand)
   }
-  if (searchParams.motorcycle_brand) {
-    query = query.eq('motorcycle_brand', searchParams.motorcycle_brand as string)
+  
+  const motorcycleBrand = getStringParam(params.motorcycle_brand)
+  if (motorcycleBrand) {
+    query = query.eq('motorcycle_brand', motorcycleBrand)
   }
-  if (searchParams.min_price) {
-    query = query.gte('price', searchParams.min_price as string)
+  
+  const minPrice = getStringParam(params.min_price)
+  if (minPrice) {
+    query = query.gte('price', minPrice)
   }
-  if (searchParams.max_price) {
-    query = query.lte('price', searchParams.max_price as string)
+  
+  const maxPrice = getStringParam(params.max_price)
+  if (maxPrice) {
+    query = query.lte('price', maxPrice)
   }
-  if (searchParams.search) {
-    query = query.or(`name.ilike.%${searchParams.search}%,description.ilike.%${searchParams.search}%,part_number.ilike.%${searchParams.search}%`)
+  
+  const search = getStringParam(params.search)
+  if (search) {
+    query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,part_number.ilike.%${search}%`)
   }
 
   // Ordering
-  const orderBy = (searchParams.order_by as string) || 'created_at'
-  const orderDirection = (searchParams.order_direction as 'asc' | 'desc') || 'desc'
+  const orderBy = getStringParam(params.order_by) || 'created_at'
+  const orderDirection = (getStringParam(params.order_direction) as 'asc' | 'desc') || 'desc'
   query = query.order(orderBy, { ascending: orderDirection === 'asc' })
 
   // Pagination
-  const page = parseInt(searchParams.page as string) || 1
+  const pageParam = getStringParam(params.page)
+  const page = pageParam ? parseInt(pageParam) : 1
   const pageSize = 24
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 
   const { data: products, error } = await query.range(from, to)
-  const { count } = await supabase
+  
+  // Build count query with same filters
+  let countQuery = supabase
     .from('products')
     .select('*', { count: 'exact', head: true })
     .eq('status', 'active')
+
+  // Apply same filters to count query
+  if (category) {
+    countQuery = countQuery.eq('category_id', category)
+  }
+  if (brand) {
+    countQuery = countQuery.eq('brand', brand)
+  }
+  if (motorcycleBrand) {
+    countQuery = countQuery.eq('motorcycle_brand', motorcycleBrand)
+  }
+  if (minPrice) {
+    countQuery = countQuery.gte('price', minPrice)
+  }
+  if (maxPrice) {
+    countQuery = countQuery.lte('price', maxPrice)
+  }
+  if (search) {
+    countQuery = countQuery.or(`name.ilike.%${search}%,description.ilike.%${search}%,part_number.ilike.%${search}%`)
+  }
+
+  const { count } = await countQuery
 
   // Get filter options
   const { data: categories } = await supabase
@@ -78,7 +127,7 @@ export default async function ProductsPage({
           <ProductFilters
             categories={categories || []}
             brands={uniqueBrands}
-            searchParams={searchParams}
+            searchParams={params}
           />
         </aside>
         <main className="flex-1">
@@ -89,11 +138,21 @@ export default async function ProductsPage({
             </p>
           </div>
           {products && products.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product: any) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {products.map((product: any) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              {count && count > 0 && (
+                <Pagination
+                  currentPage={page}
+                  totalPages={Math.ceil(count / pageSize)}
+                  totalItems={count}
+                  pageSize={pageSize}
+                />
+              )}
+            </>
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-500">No se encontraron productos</p>

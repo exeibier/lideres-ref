@@ -38,34 +38,50 @@ export default async function AdminPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Panel de administración</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Productos</h3>
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-700 mb-2">Productos</h3>
           <p className="text-3xl font-bold text-gray-900">{productsCount || 0}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Pedidos totales</h3>
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-700 mb-2">Pedidos totales</h3>
           <p className="text-3xl font-bold text-gray-900">{ordersCount || 0}</p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Pedidos pendientes</h3>
-          <p className="text-3xl font-bold text-yellow-600">{pendingOrdersCount || 0}</p>
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-700 mb-2">Pedidos pendientes</h3>
+          <p className="text-3xl font-bold text-[var(--color-warning)]">{pendingOrdersCount || 0}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Link
+          href="/admin/products"
+          className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-[var(--color-primary-200)]"
+        >
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Gestionar productos</h2>
+          <p className="text-gray-600">Ver, crear y editar productos del catálogo</p>
+        </Link>
+
         <Link
           href="/admin/products/upload"
-          className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+          className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-[var(--color-primary-200)]"
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Carga masiva de productos</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Carga masiva de productos</h2>
           <p className="text-gray-600">Sube un archivo Excel para cargar productos en masa</p>
         </Link>
 
         <Link
-          href="/admin/orders"
-          className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+          href="/admin/products/import"
+          className="bg-white border-2 border-[var(--color-primary-300)] rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-[var(--color-primary-400)]"
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Gestionar pedidos</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Importar desde proveedores externos</h2>
+          <p className="text-gray-600">Importa productos desde archivos de proveedores (Motos y Equipos, MRM)</p>
+        </Link>
+
+        <Link
+          href="/admin/orders"
+          className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-[var(--color-primary-200)]"
+        >
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Gestionar pedidos</h2>
           <p className="text-gray-600">Ver y gestionar todos los pedidos</p>
         </Link>
       </div>

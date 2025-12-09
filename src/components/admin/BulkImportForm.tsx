@@ -118,7 +118,7 @@ export default function BulkImportForm() {
             value={providerCode}
             onChange={(e) => setProviderCode(e.target.value as ProviderCode)}
             required
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm text-gray-900 bg-white py-2 px-3"
           >
             <option value="motos_y_equipos">Motos y Equipos</option>
             <option value="mrm">MRM</option>
@@ -132,13 +132,14 @@ export default function BulkImportForm() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Data File (CSV/XLSX)
           </label>
-          <UploadButton
-            endpoint="importFile"
-            onClientUploadComplete={handleFileUploadComplete}
-            onUploadError={handleFileUploadError}
-            onUploadBegin={() => setUploadStatus({ status: 'uploading', message: 'Uploading file...' })}
-            className="ut-button:bg-blue-600 ut-button:hover:bg-blue-700 ut-button:ut-uploading:cursor-not-allowed"
-          />
+          <div className="mb-2 [&_button]:bg-blue-600 [&_button]:hover:bg-blue-700 [&_button]:text-white [&_button]:px-4 [&_button]:py-2 [&_button]:rounded-md [&_button]:font-semibold [&_button]:border-0 [&_button]:cursor-pointer">
+            <UploadButton
+              endpoint="importFile"
+              onClientUploadComplete={handleFileUploadComplete}
+              onUploadError={handleFileUploadError}
+              onUploadBegin={() => setUploadStatus({ status: 'uploading', message: 'Uploading file...' })}
+            />
+          </div>
           {fileUrl && (
             <p className="mt-2 text-sm text-green-600">
               ✓ File uploaded: {uploadedFiles[0]?.fileName}
@@ -150,15 +151,16 @@ export default function BulkImportForm() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Product Images (Optional)
           </label>
-          <UploadButton
-            endpoint="productImage"
-            onClientUploadComplete={(res) => {
-              const newFiles = res.map((f) => ({ fileName: f.name, url: f.url }))
-              setUploadedFiles([...uploadedFiles, ...newFiles])
-            }}
-            onUploadError={handleFileUploadError}
-            className="ut-button:bg-gray-600 ut-button:hover:bg-gray-700"
-          />
+          <div className="mb-2 [&_button]:bg-gray-600 [&_button]:hover:bg-gray-700 [&_button]:text-white [&_button]:px-4 [&_button]:py-2 [&_button]:rounded-md [&_button]:font-semibold [&_button]:border-0 [&_button]:cursor-pointer">
+            <UploadButton
+              endpoint="productImage"
+              onClientUploadComplete={(res) => {
+                const newFiles = res.map((f) => ({ fileName: f.name, url: f.url }))
+                setUploadedFiles([...uploadedFiles, ...newFiles])
+              }}
+              onUploadError={handleFileUploadError}
+            />
+          </div>
           {uploadedFiles.length > 1 && (
             <p className="mt-2 text-sm text-gray-600">
               {uploadedFiles.length - 1} image(s) uploaded
